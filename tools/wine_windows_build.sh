@@ -1,109 +1,40 @@
 #!/bin/bash
-# Wine Windows build script for GetNewSamsungFirmware
+# Build the Windows executables with Wine.
+# Works on Linux and macOS. Requires Windows Python installed inside the Wine prefix.
+#
+# Result:
+#   dist/windows_x64_gnsf.exe      – CLI (console)
+#   dist/windows_x64_gnsf-GUI.exe  – GUI (no console)
 
-set -e
+set -euo pipefail
 
-echo "Building GetNewSamsungFirmware Windows binaries using Wine..."
-echo "==========================================================="
-
-BUILD_DIR=$(pwd)
-
-cd ..
-echo "Current working directory: $(pwd)"
-
+cd "$(dirname "$0")/.."
 export WINEDEBUG="-all"
 
-WINE_PYTHON="wine python.exe"
-VENV_NAME=".venv_windows64_build"
-WINE_PIP="wine ${VENV_NAME}/Scripts/pip.exe"
-WINE_PYINSTALLER="wine ${VENV_NAME}/Scripts/pyinstaller.exe"
-
-if ! command -v wine &> /dev/null; then
-    echo "Error: Wine is not installed. Please install Wine to continue."
+WINE="${WINE:-$(command -v wine || command -v wine64 || true)}"
+if [ -z "$WINE" ]; then
+    echo "Error: Wine is not installed (set WINE=/path/to/wine to override)."
     exit 1
 fi
 
-echo "Creating Wine Python virtual environment..."
-if [ -d "$VENV_NAME" ]; then
-    echo "Removing existing virtual environment..."
-    rm -rf "$VENV_NAME"
-fi
+WINE_PYTHON="${WINE_PYTHON:-python.exe}"
+VENV=".venv_windows64_build"
+PYINSTALLER=("$WINE" "$VENV/Scripts/pyinstaller.exe" --onefile --clean --noconfirm
+             --icon AppIcons/app_icon.ico --add-data "AppIcons;AppIcons")
 
-$WINE_PYTHON -m venv $VENV_NAME
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to create virtual environment."
-    exit 1
-fi
-echo "Virtual environment created successfully."
+echo "Creating build environment ($VENV)..."
+rm -rf "$VENV"
+"$WINE" "$WINE_PYTHON" -m venv "$VENV"
+"$WINE" "$VENV/Scripts/python.exe" -m pip install -q -r requirements.txt pyinstaller
 
-echo "Installing required packages..."
-$WINE_PIP install -r requirements.txt
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to install requirements."
-    exit 1
-fi
+echo "Building CLI version..."
+"${PYINSTALLER[@]}" --console --name windows_x64_gnsf gnsf.py
 
-echo "Installing PyInstaller..."
-$WINE_PIP install pyinstaller
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to install PyInstaller."
-    exit 1
-fi
-echo "All dependencies installed successfully."
+echo "Building GUI version..."
+"${PYINSTALLER[@]}" --windowed --name windows_x64_gnsf-GUI gnsf-GUI.py
 
-ICON_PATH="AppIcons/app_icon.ico"
-if [ ! -f "$ICON_PATH" ]; then
-    echo "Icon file not found. Attempting to convert..."
-    if command -v magick &> /dev/null; then
-        magick convert AppIcons/512.png -define icon:auto-resize="256,128,64,48,32,16" $ICON_PATH
-        if [ $? -ne 0 ]; then
-            echo "Warning: Icon conversion failed. Building without custom icon."
-            ICON_ARG=""
-        else
-            echo "Icon conversion successful."
-            ICON_ARG="--icon=$ICON_PATH"
-        fi
-    else
-        echo "Warning: ImageMagick not found. Building without custom icon."
-        ICON_ARG=""
-    fi
-else
-    echo "Using existing icon: $ICON_PATH"
-    ICON_ARG="--icon=$ICON_PATH"
-fi
+rm -rf build ./*.spec "$VENV"
 
-if [ ! -d "$BUILD_DIR/output" ]; then
-    mkdir -p "$BUILD_DIR/output"
-fi
-
-echo "Building CLI version (with console)..."
-$WINE_PYINSTALLER gnsf.py --onefile --clean -c $ICON_ARG --name windows_x64_gnsf --add-data "AppIcons;AppIcons"
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to build CLI version."
-    cd "$BUILD_DIR"
-    exit 1
-fi
-
-echo "Building GUI version (no console)..."
-$WINE_PYINSTALLER gnsf-GUI.py --onefile --clean -w $ICON_ARG --name windows_x64_gnsf-GUI --add-data "AppIcons;AppIcons"
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to build GUI version."
-    cd "$BUILD_DIR"
-    exit 1
-fi
-
-echo "Cleaning up build files..."
-rm -rf build
-rm -f *.spec
-
-echo "Removing virtual environment..."
-rm -rf $VENV_NAME
-
-cd "$BUILD_DIR"
-
-echo
-echo "Build complete!"
-echo "Executables can be found in the output directory:"
-echo "- output/windows_x64_gnsf.exe"
-echo "- output/windows_x64_gnsf-GUI.exe"
-echo "==========================================================="
+echo "Done:"
+echo "  dist/windows_x64_gnsf.exe"
+echo "  dist/windows_x64_gnsf-GUI.exe"

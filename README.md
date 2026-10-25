@@ -4,37 +4,18 @@
 
 Hey there! 👋  
 
-Download + decrypt in one shot:
+Want the latest Samsung firmware for **Odin** and decrypt it without jumping through hoops? That's exactly why I built **GNSF**. It helps you:
+
+- Fetch the newest firmware for your Samsung model/region — phones, tablets **and Galaxy Watch**
+- Download it with automatic resume
+- Auto-decrypt `.enc2`/`.enc4` packages
+
+All in one go, **no IMEI or serial number needed**:
 
 ```bash
-# Using IMEI
-./gnsf.py \
-  -m SM-S928B \
-  -r XSA \
-  -i 12345678 \
-  download \
-  -O ./downloads
-
-# Using Serial Number
-./gnsf.py \
-  -m SM-S928B \
-  -r ZTA \
-  -s R5CY10Z0STW \
-  download \
-  -O ./downloads
-
-# Additional options:
-# -v to specify a version; omit for "latest"
-# --resume to pick up where you left off
-# --no-decrypt to skip the auto‑decrypt step
+./gnsf.py -m SM-S928B -r XSA download -O ./downloads
+./gnsf.py -m SM-L310 -r XSG download -O ./downloads   # Galaxy Watch7
 ```
-the latest Samsung firmware for **Odin** and decrypt it without jumping through hoops? That’s exactly why I built **GNSF**. It’s a simple CLI tool that helps you:
-
-- Fetch the newest firmware for your Samsung model/region  
-- Download it with resume support  
-- Auto-decrypt `.enc2`/`.enc4` packages  
-
-All in one go.
 
 Project URL: https://github.com/keklick1337/gnsf
 
@@ -43,216 +24,138 @@ Project URL: https://github.com/keklick1337/gnsf
 | Platform | GUI Version | CLI Version |
 |----------|-------------|-------------|
 | Windows x64 | [![Windows - GUI version](https://img.shields.io/static/v1?label=Windows&message=GUI+version&color=2ea44f)](https://github.com/keklick1337/gnsf/releases/latest/download/windows_x64_gnsf-GUI.exe) | [![Windows - CLI version](https://img.shields.io/static/v1?label=Windows&message=CLI+version&color=blue)](https://github.com/keklick1337/gnsf/releases/latest/download/windows_x64_gnsf.exe) |
-| macOS ARM64 | [![macOS - GUI version](https://img.shields.io/static/v1?label=macOS&message=GUI+version&color=2ea44f)](https://github.com/keklick1337/gnsf/releases/latest/download/GetNewSamsungFirmware-macOS-arm64.dmg) | - |
+| macOS ARM64 | [![macOS - GUI version](https://img.shields.io/static/v1?label=macOS&message=GUI+version&color=2ea44f)](https://github.com/keklick1337/gnsf/releases/latest/download/GetNewSamsungFirmware-macOS-arm64.dmg) | [![macOS - CLI version](https://img.shields.io/static/v1?label=macOS&message=CLI+version&color=blue)](https://github.com/keklick1337/gnsf/releases/latest/download/macos_arm64_gnsf) |
 
 ---
 
 ## Features
 
-- 🔍 `check` command to list the latest firmware version  
-- ⬇️ `download` command to grab and decrypt firmware  
-- 🔐 `decrypt` command for manual decryption of `.enc2` / `.enc4` files  
-- 🧩 Auto‑fill your IMEI (if you give 8+ digits) or use Serial Number  
-- 📱 Support for both IMEI and Serial Number authentication  
-- ↪️ Resume downloads if they got interrupted  
+- 🔍 `check` – latest firmware for one region (or all known regions), optionally with older versions
+- ⬇️ `download` – download and decrypt firmware in one step
+- 🔐 `decrypt` – manual decryption of `.enc2` / `.enc4` files
+- ⌚ Galaxy Watch support
+- ↪️ Interrupted downloads are resumed automatically (also on network errors)
+- 🖥️ GUI and CLI versions
 
 ---
 
 ## Requirements
 
-- Python 3.6+  
-- Pip dependencies (we’ve got `pycryptodome`, `requests`, `tqdm` listed in `requirements.txt`)
-
----
+- Python 3.7+
+- [`pycryptodome`](https://pypi.org/project/pycryptodome/) – the only dependency
+- Tkinter for the GUI (included with most Python installations)
 
 ## Installation
 
-1. Clone this repo  
-   ```bash
-   git clone https://github.com/keklick1337/gnsf.git
-   cd gnsf
-   ```
-
-2. Install dependencies  
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-You’re all set!
+```bash
+git clone https://github.com/keklick1337/gnsf.git
+cd gnsf
+pip install -r requirements.txt
+```
 
 ---
 
 ## Usage
 
-Run the main script with `-m` (model) and `-r` (region), plus one of the commands below:
-
 ```bash
 python gnsf.py -m <MODEL> -r <CSC> <command> [options]
-# or
-./gnsf.py -m <MODEL> -r <CSC> <command> [options]
 ```
 
-**Authentication Options:**
-- `-i <IMEI>` - Use device IMEI (8+ digits, auto-completed to 15 digits)
-- `-s <SERIAL>` - Use device Serial Number (1-35 alphanumeric characters)
-
-Note: For `download` and `decrypt` (ENC4) commands, you must provide either IMEI or Serial Number for authentication.
-
-### 1. check
-
-See what the latest firmware is for a specific region, or loop through all known CSC codes:
+### check
 
 ```bash
 # Single region
 ./gnsf.py -m SM-S928B -r XSA check
 
-# All regions (will print “not found” if not available)
+# Single region with older published versions
+./gnsf.py -m SM-S928B -r XSA check -a
+
+# All known regions (only regions with firmware are printed)
 ./gnsf.py -m SM-S928B check
 ```
 
-### 2. download
-
-Download + decrypt in one shot:
+### download
 
 ```bash
-./gnsf.py \
-  -m SM-S928B \
-  -r XSA \
-  -i 12345678 \
-  download \
-  -O ./downloads \
-  # Replace 12345678 to your IMEI or use -s with serial number
-  # optionally -v to specify a version; omit for “latest”
-  # use --resume to pick up where you left off
-  # add --no-decrypt to skip the auto‑decrypt step
+./gnsf.py -m SM-S928B -r XSA download -O ./downloads
+# -v <version>   firmware version; omit for latest. Accepts the full PDA/CSC/MODEM
+#                string or one part of it (e.g. the CSC code from 'check -a')
+# --no-decrypt   keep the encrypted .enc2/.enc4 file
 ```
 
-### 3. decrypt
+Run the same command again after an interruption and the download continues where it stopped.
 
-Just decrypt a file you already downloaded:
+### decrypt
 
 ```bash
-# Using IMEI (for ENC4 files)
-./gnsf.py \
-  -m SM-S928B \
-  decrypt \
-  -v FULL_VERSION_NAME_HERE \
-  -V 4 \
-  -i firmware.enc4 \
-  -o firmware.tar.md5 \
-  --imei 123456789012345
-
-# Using Serial Number (for ENC4 files)
-./gnsf.py \
-  -m SM-S928B \
-  decrypt \
-  -v FULL_VERSION_NAME_HERE \
-  -V 4 \
-  -i firmware.enc4 \
-  -o firmware.tar.md5 \
-  -s R5CY10Z0STW
-
-# For ENC2 files (no device ID needed)
-./gnsf.py \
-  -m SM-S928B \
-  decrypt \
-  -v FULL_VERSION_NAME_HERE \
-  -V 2 \
-  -i firmware.enc2 \
-  -o firmware.tar.md5
+./gnsf.py -m SM-S928B -r XSA decrypt \
+  -v S928BXXU6EZIF/S928BOXM6EZIF/S928BXXU6EZIF/S928BXXU6EZIF \
+  -i firmware.zip.enc4 \
+  -o firmware.zip
+# -V 2|4 forces the encryption version (detected from the file name by default)
+# -o defaults to the input file name without .encN
 ```
 
 ---
 
-## GUI Version
-
-If you prefer a graphical interface over the command line, GNSF also comes with a GUI version:
+## GUI
 
 ![GNSF GUI Screenshot](https://github.com/keklick1337/gnsf/blob/main/screenshots/gui.png?raw=true)
 
-### Pre-compiled Windows Binaries
-
-Windows users can download ready-to-use executable files for both GUI and console versions from the [GitHub Releases](https://github.com/keklick1337/gnsf/releases) page - no Python installation required!
-
-### GUI Requirements
-
-- Python 3.6+
-- Tkinter (included with most Python installations)
-
-### Running the GUI
-
-#### On Windows
-
 ```bash
-# Navigate to the GNSF directory
-cd gnsf
-
-# Run the GUI
-python gnsf-GUI.py
-```
-
-#### On macOS
-
-```bash
-# Navigate to the GNSF directory
-cd gnsf
-
-# Run the GUI
 python3 gnsf-GUI.py
 ```
 
-Or make it executable and double-click in Finder:
+On Linux you may need Tkinter first, e.g. `sudo apt-get install python3-tk`.
 
-```bash
-chmod +x gnsf-GUI.py
-```
+- Check firmware across all regions, double-click a result to download it
+- Download progress with speed and ETA, cancel and resume any time
+- Manual decrypt tab
+- Opens the download folder when finished
 
-#### On Linux
+---
 
-```bash
-# Navigate to the GNSF directory
-cd gnsf
+## Building
 
-# Ensure Tkinter is installed (Ubuntu/Debian example)
-sudo apt-get install python3-tk
+| Target | Command | Output |
+|--------|---------|--------|
+| Windows (via Wine, on Linux or macOS) | `tools/wine_windows_build.sh` | `dist/windows_x64_gnsf.exe` (CLI), `dist/windows_x64_gnsf-GUI.exe` (GUI) |
+| macOS | `tools/macos_arm_build.sh` | `dist/macos_<arch>_gnsf` (CLI), `dist/GetNewSamsungFirmware-macOS-<arch>.dmg` (GUI) |
 
-# Run the GUI
-python3 gnsf-GUI.py
-```
-
-Or make it executable:
-
-```bash
-chmod +x gnsf-GUI.py
-./gnsf-GUI.py
-```
-
-### GUI Features
-
-- Easy firmware checking across multiple regions
-- Download progress with speed and ETA display
-- Auto-opening of download folder when complete
-- Support for both IMEI and Serial Number input
-- Auto-completion and validation for IMEI numbers
-- All the power of the CLI with a user-friendly interface
+The Wine build needs Windows Python installed in the Wine prefix (`python.exe` on the Wine path, or set `WINE_PYTHON`). Use `WINE=/path/to/wine` to pick a specific Wine binary.
 
 ---
 
 ## Handy Tips
 
-- If you only give the first 8 digits of your IMEI with `-i`, the tool will pad & Luhn‑check the rest for you.  
-- Serial Numbers (`-s`) must be 1-35 alphanumeric characters (letters and digits only).
-- For firmware download and ENC4 decryption, you can use either IMEI or Serial Number - both work equally well.
-- `.enc2` files use V2 decryption (no device ID needed), `.enc4` use V4 (requires IMEI or Serial Number). GNSF figures it out automatically when downloading.
+- Some regions don't carry a package for every model (the server answers `S01`) — just try another region from `check`.
+- The `-i`/`-s` (IMEI / serial number) options from older versions are still accepted but no longer needed.
+
+---
+
+## Project layout
+
+```
+gnsf.py              CLI entry point
+gnsf-GUI.py          GUI entry point
+gnsflib/fus.py       Samsung FUS protocol: auth, firmware info, download
+gnsflib/core.py      download / decrypt / check logic shared by CLI and GUI
+gnsflib/firmware.py  firmware version parsing
+gnsflib/cli.py       command-line interface
+gnsflib/gui.py       Tkinter interface
+gnsflib/csc.py       CSC region list
+```
 
 ---
 
 ## Contributing
 
 Found a bug or wanna add a cool feature? PRs are welcome! Just fork, hack away, and send a pull request.  
-Please keep the code style consistent, and add tests if you can.
+Please keep the code style consistent.
 
----
+## Credits
+
+The current FUS protocol (Smart Switch endpoints, nonce signing) follows [samloader-rs](https://github.com/topjohnwu/samloader-rs) by topjohnwu.
 
 ## License
 
@@ -268,13 +171,9 @@ Happy flashing! 🚀
 
 ### Samsung Firmware Monitor
 
-If you need to check available firmware before downloading or want to monitor the latest releases:
-
-- 🌐 **[Samsung Firmware Monitor](https://samsung-firmware.trustcrypt.com/)** - A comprehensive online database where you can browse and monitor the latest firmware releases for any Samsung device model.
+- 🌐 **[Samsung Firmware Monitor](https://samsung-firmware.trustcrypt.com/)** – browse and monitor the latest firmware releases for any Samsung device model.
 
 This resource complements GNSF by letting you:
 - Check available firmware versions across multiple devices at once
 - Monitor when new firmware gets released
 - View firmware details before downloading
-
----

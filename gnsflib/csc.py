@@ -1,6 +1,6 @@
-# csclist.py – mapping of Samsung CSC codes to country/region names
+# csc.py – mapping of Samsung CSC codes to country/region names
 #
-# Author: Vladislav Tislenko (keklick1337), 2025
+# Author: Vladislav Tislenko (keklick1337), 2025-2026
 #
 # Description:
 #     This module defines CSC_DICT, a dictionary mapping 3‑letter Samsung CSC codes
