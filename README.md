@@ -119,9 +119,11 @@ On Linux you may need Tkinter first, e.g. `sudo apt-get install python3-tk`.
 
 | Target | Command | Output |
 |--------|---------|--------|
+| Windows | `tools\windows_build.bat` | `dist\windows_x64_gnsf.exe` (CLI), `dist\windows_x64_gnsf-GUI.exe` (GUI) |
 | Windows (via Wine, on Linux or macOS) | `tools/wine_windows_build.sh` | `dist/windows_x64_gnsf.exe` (CLI), `dist/windows_x64_gnsf-GUI.exe` (GUI) |
 | macOS | `tools/macos_arm_build.sh` | `dist/macos_<arch>_gnsf` (CLI), `dist/GetNewSamsungFirmware-macOS-<arch>.dmg` (GUI) |
 
+The Windows build needs Python 3 from python.org (`py` launcher or `python` on PATH); run the `.bat` from any directory.
 The Wine build needs Windows Python installed in the Wine prefix (`python.exe` on the Wine path, or set `WINE_PYTHON`). Use `WINE=/path/to/wine` to pick a specific Wine binary.
 
 ---
